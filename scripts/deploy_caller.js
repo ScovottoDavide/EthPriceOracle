@@ -3,7 +3,7 @@ const common = require('../utils/common.js')
 const PRIVATE_KEY_FILE_NAME = process.env.PRIVATE_KEY_FILE || './caller_private_key'
 
 async function main() {
-    const {provider, account} = common.loadAccount(PRIVATE_KEY_FILE_NAME)
+    const {account} = common.loadAccount(PRIVATE_KEY_FILE_NAME)
 
     const CallerContract = await ethers.getContractFactory("CallerContract", account);
     const address = await CallerContract.deploy();
