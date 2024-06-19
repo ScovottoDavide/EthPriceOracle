@@ -4,10 +4,15 @@ const PRIVATE_KEY_FILE_NAME = process.env.PRIVATE_KEY_FILE || './caller_private_
 
 async function main() {
     const {account} = common.loadAccount(PRIVATE_KEY_FILE_NAME)
+    const oracleAddress = ''
 
     const CallerContract = await ethers.getContractFactory("CallerContract", account);
-    const address = await CallerContract.deploy();
-    console.log(address)
+    const callerContractToken = await CallerContract.deploy();
+    console.log(callerContractToken.address)
+
+    // add factory and exchange address to router
+    const box = CallerContract.attach(callerContractToken.address);
+    await box.setOracleInstanceAddress(oracleAddress);
 }
 
 main()

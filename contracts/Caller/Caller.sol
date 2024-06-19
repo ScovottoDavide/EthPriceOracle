@@ -41,7 +41,4 @@ contract CallerContract is Ownable {
       delete myRequests[_id];
       emit PriceUpdatedEvent(_ethPrice, _id);
     }
-    
-
-
 }
