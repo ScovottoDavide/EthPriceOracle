@@ -8,7 +8,6 @@ function loadAccount (privateKeyFileName) {
       privateKeyStr,
       provider
   ); 
-  console.log('Loaded account: ', account)  
   return {
     account: account
   }

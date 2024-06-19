@@ -3,40 +3,46 @@ const common = require('./utils/common.js')
 const SLEEP_INTERVAL = process.env.SLEEP_INTERVAL || 2000
 const PRIVATE_KEY_FILE_NAME = process.env.PRIVATE_KEY_FILE || './caller_private_key'
 
-const callerAddress =  "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
-const oracleAddress =  "0x5fbdb2315678afecb367f032d93f642f64180aa3"
+const callerAddress =  "0x8464135c8F25Da09e49BC8782676a84730C318bC"
+const oracleAddress =  "0x5FbDB2315678afecb367f032d93F642f64180aa3"
 
 
-async function getCallerContract () {
-  return await ethers.getContractAt("CallerContract", callerAddress);
+async function getCallerContract (signer) {
+  return await ethers.getContractFactory("CallerContract", signer);
 }
 
 async function filterEvents (callerContract) {
-  callerContract.on("PriceUpdatedEvent", async (err, event) => {
-    if (err) console.error('Error on event', err)
-    console.log(event)
-    console.log('* New PriceUpdated event. ethPrice: ' + event.returnValues.ethPrice)
+  callerContract.on("newOracleAddressEvent", async (oracleAddressSet, event) => {
+    console.log('* New newOracleAddressEvent event. oracle address: ' + oracleAddressSet)
+    return
   })
-  callerContract.on("ReceivedNewRequestIdEvent", async (err, event) => {
-    if (err) console.error('Error on event', err)
+  callerContract.on("ReceivedNewRequestIdEvent", async (id, event) => {
+    console.log('* New ReceivedNewRequestIdEvent id: ' + BigInt(id))
+  })
+  callerContract.on("PriceUpdatedEvent", async (ethPrice, id, event) => {
+    console.log('* New PriceUpdated event. ethPrice: ' + ethPrice + ', request_id: ' + BigInt(id))
   })
 }
 
 async function init () {
   const account = common.loadAccount(PRIVATE_KEY_FILE_NAME)
-  const callerContract = await getCallerContract()
-  filterEvents(callerContract)
-  return { callerContract, account }
+  const callerContractFactory = await getCallerContract(account.account)
+  const box = callerContractFactory.attach(callerAddress)
+
+  await filterEvents(box)
+  const callerNonce = await account.account.getNonce()
+  await box.setOracleInstanceAddress(oracleAddress, {nonce: callerNonce});
+  return box
 }
 
 (async () => {
-  const { callerContract, account } = await init()
+  const callerContract = await init()
   process.on( 'SIGINT', () => {
     console.log('Disconnecting Callers client')
     process.exit( );
   })
-  await callerContract.setOracleInstanceAddress(oracleAddress, {from: account.address})
-  setInterval( async () => {
-    await callerContract.updateEthPrice({from: account.address}) 
-  }, SLEEP_INTERVAL);
+  // setInterval( async () => {
+  //   await callerContract.updateEthPrice() 
+  // }, SLEEP_INTERVAL);
+  await callerContract.updateEthPrice()
 })()

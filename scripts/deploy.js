@@ -27,14 +27,14 @@ async function main() {
     console.log(await callerContractToken.target)
 
     // add factory and exchange address to router
-    const box = CallerContract.attach((await callerContractToken).target);
-    const callerNonce = await callerAccount.getNonce()
-    await box.setOracleInstanceAddress((await Oracle).target, {from: callerAccount.address, nonce: callerNonce});
-
-    box.on("newOracleAddressEvent", async (oracleAddressSet, event) => {
-        console.log('* New newOracleAddressEvent event. oracle address: ' + oracleAddressSet)
-        return
-    })
+    //const box = CallerContract.attach((await callerContractToken).target);
+    //const callerNonce = await callerAccount.getNonce()
+    //await box.setOracleInstanceAddress((await Oracle).target, {from: callerAccount.address, nonce: callerNonce});
+//
+    //box.on("newOracleAddressEvent", async (oracleAddressSet, event) => {
+    //    console.log('* New newOracleAddressEvent event. oracle address: ' + oracleAddressSet)
+    //    return
+    //})
     
 }
 

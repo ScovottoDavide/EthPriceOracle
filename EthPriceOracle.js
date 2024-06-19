@@ -8,11 +8,11 @@ const CHUNK_SIZE = process.env.CHUNK_SIZE || 3
 const MAX_RETRIES = process.env.MAX_RETRIES || 5
 var pendingRequests = []
 
-const oracleAddress =  "0x5fbdb2315678afecb367f032d93f642f64180aa3"
+const oracleAddress =  "0x5FbDB2315678afecb367f032d93F642f64180aa3"
 
 
-async function getOracleContract () {
-  return await ethers.getContractAt("EthPriceOracle", oracleAddress);
+async function getOracleContract (signer) {
+  return await ethers.getContractFactory("EthPriceOracle", signer);
 }
 
 async function retrieveLatestEthPrice () {
@@ -27,26 +27,18 @@ async function retrieveLatestEthPrice () {
   }
 
 async function filterEvents (oracleContract) {
-    oracleContract.on("GetLatestEthPriceEvent", async (err, event) => {
-      if (err) {
-        console.error('Error on event', err)
-        return
-      }
-      await addRequestToQueue(event)
+    oracleContract.on("GetLatestEthPriceEvent", async (sender, id, event) => {
+      console.log('* New GetLatestEthPriceEvent with (sender, id) = ', sender, BigInt(id))
+      await addRequestToQueue(sender, id)
     })
   
-    oracleContract.on("SetLatestEthPriceEvent", async (err, event) => {
-      if (err) {
-        console.error('Error on event', err)
-        return
-      }
+    oracleContract.on("SetLatestEthPriceEvent", async (ethPrice, callerAddress, event) => {
+      console.log('* New SetLatestEthPriceEvent with (ethPrice, callerAddress) = ', BigInt(ethPrice), callerAddress)
       // Do something
     })
   }
 
-  async function addRequestToQueue (event) {
-    const callerAddress = event.returnValues.callerAddress
-    const id = event.returnValues.id
+async function addRequestToQueue (callerAddress, id) {
     pendingRequests.push({callerAddress, id})
 }
 
@@ -87,7 +79,7 @@ async function processRequest (oracleContract, ownerAddress, id, callerAddress) 
     const ethPriceInt = (new BN(parseInt(ethPrice), 10)).mul(multiplier)
     const idInt = new BN(parseInt(id))
     try {
-      await oracleContract.methods.setLatestEthPrice(ethPriceInt.toString(), callerAddress, idInt.toString()).send({ from: ownerAddress })
+      await oracleContract.setLatestEthPrice(ethPriceInt.toString(), callerAddress, idInt.toString())
     } catch (error) {
       console.log('Error encountered while calling setLatestEthPrice.')
       // Do some error handling
@@ -97,19 +89,21 @@ async function processRequest (oracleContract, ownerAddress, id, callerAddress) 
   async function init () {
     // Start here
     const account = common.loadAccount(PRIVATE_KEY_FILE_NAME)
-    const oracleContract = await getOracleContract()
-    await filterEvents(oracleContract)
-    return {oracleContract, account}
+    const oracleContractFactory = await getOracleContract(account.account)
+    const box = oracleContractFactory.attach(oracleAddress)
+
+    await filterEvents(box)
+    return [box, account]
   }
 
   (async () => {
-    const { oracleContract, account } = await init()
+    const [oracleContract, account] = await init()
     process.on( 'SIGINT', () => {
       console.log('Disconnecting Oracle client')
       process.exit( )
     })
     setInterval(async () => {
-      await processQueue(oracleContract, account)
+      await processQueue(oracleContract, account.account.address)
     }, SLEEP_INTERVAL)
   })()
   
