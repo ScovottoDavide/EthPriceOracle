@@ -1,13 +1,20 @@
-# Sample Hardhat Project
+# Simple Ethereum-USD Price Oracle
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+Simple Ethereum-USD price oracle that fetches the price updates from Binance.
 
-Try running some of the following tasks:
-
+1. Run local node and deploy contracts.
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
 npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
+npx hardhat test
+
+npx hardhat node
+
+npx hardhat run ./scripts/deploy.js
+```
+
+2. Execute the clients
+```shell
+node ./Client.js
+
+node ./EthPriceOracle.js
 ```
