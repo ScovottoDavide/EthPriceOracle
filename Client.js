@@ -1,6 +1,6 @@
 const { ethers } = require('hardhat');
 const common = require('./utils/common.js')
-const SLEEP_INTERVAL = process.env.SLEEP_INTERVAL || 2000
+const SLEEP_INTERVAL = process.env.SLEEP_INTERVAL || 20000
 const PRIVATE_KEY_FILE_NAME = process.env.PRIVATE_KEY_FILE || './caller_private_key'
 
 const callerAddress =  "0x8464135c8F25Da09e49BC8782676a84730C318bC"
@@ -41,8 +41,7 @@ async function init () {
     console.log('Disconnecting Callers client')
     process.exit( );
   })
-  // setInterval( async () => {
-  //   await callerContract.updateEthPrice() 
-  // }, SLEEP_INTERVAL);
-  await callerContract.updateEthPrice()
+  setInterval( async () => {
+    await callerContract.updateEthPrice() 
+  }, SLEEP_INTERVAL);
 })()

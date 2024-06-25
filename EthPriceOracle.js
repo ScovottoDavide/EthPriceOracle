@@ -81,7 +81,7 @@ async function processRequest (oracleContract, ownerAddress, id, callerAddress) 
     try {
       await oracleContract.setLatestEthPrice(ethPriceInt.toString(), callerAddress, idInt.toString())
     } catch (error) {
-      console.log('Error encountered while calling setLatestEthPrice.')
+      console.log('Error encountered while calling setLatestEthPrice: ', error)
       // Do some error handling
     }
   }

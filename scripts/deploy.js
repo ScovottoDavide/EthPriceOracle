@@ -21,8 +21,10 @@ async function main() {
     const EthPriceOracle = await ethers.getContractFactory("EthPriceOracle", oracleAccount);
     const Oracle = await (await EthPriceOracle.deploy(oracleAccount.address)).waitForDeployment();
     console.log(Oracle.target)
-    const box = await Oracle.attach(oracleAccount)
+    const box = await Oracle.connect(oracleAccount)
     await box.addOracle(oracleAccount.address)
+    const nonce = await oracleAccount.getNonce()
+    await box.setThreshold(1, {nonce: nonce})
 
     const CallerContract = await ethers.getContractFactory("CallerContract", callerAccount);
     const callerContractToken = await (await CallerContract.deploy()).waitForDeployment();
