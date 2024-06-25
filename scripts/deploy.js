@@ -19,23 +19,14 @@ async function main() {
     );
 
     const EthPriceOracle = await ethers.getContractFactory("EthPriceOracle", oracleAccount);
-    const Oracle = (await EthPriceOracle.deploy()).waitForDeployment();
-    console.log((await Oracle).target)
+    const Oracle = await (await EthPriceOracle.deploy(oracleAccount.address)).waitForDeployment();
+    console.log(Oracle.target)
+    const box = await Oracle.attach(oracleAccount)
+    await box.addOracle(oracleAccount.address)
 
     const CallerContract = await ethers.getContractFactory("CallerContract", callerAccount);
     const callerContractToken = await (await CallerContract.deploy()).waitForDeployment();
-    console.log(await callerContractToken.target)
-
-    // add factory and exchange address to router
-    //const box = CallerContract.attach((await callerContractToken).target);
-    //const callerNonce = await callerAccount.getNonce()
-    //await box.setOracleInstanceAddress((await Oracle).target, {from: callerAccount.address, nonce: callerNonce});
-//
-    //box.on("newOracleAddressEvent", async (oracleAddressSet, event) => {
-    //    console.log('* New newOracleAddressEvent event. oracle address: ' + oracleAddressSet)
-    //    return
-    //})
-    
+    console.log(callerContractToken.target)
 }
 
 main()
